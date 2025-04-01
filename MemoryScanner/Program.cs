@@ -237,16 +237,16 @@ namespace MemoryScanner
 
         // REQUIRED METHODS
         [DllImport("kernel32.dll")]
-        public static extern IntPtr OpenProcess(int dwDesiredAccess, bool bInheritHandle, int dwProcessId);
+        public static extern IntPtr OpenProcess(uint dwDesiredAccess, bool bInheritHandle, uint dwProcessId);
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, UIntPtr dwSize, out int lpNumberOfBytesRead);
+        public static extern bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, [Out] byte[] lpBuffer, UIntPtr dwSize, out UIntPtr lpNumberOfBytesRead);
         
         [DllImport("kernel32.dll")]
-        static extern void GetSystemInfo(out SYSTEM_INFO lpSystemInfo);
+        public static extern void GetSystemInfo(out SYSTEM_INFO lpSystemInfo);
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        static extern int VirtualQueryEx(IntPtr hProcess, IntPtr lpAddress, out MEMORY_BASIC_INFORMATION lpBuffer, uint dwLength);
+        public static extern UIntPtr VirtualQueryEx(IntPtr hProcess, IntPtr lpAddress, out MEMORY_BASIC_INFORMATION lpBuffer, UIntPtr dwLength);
 
         // process to be inspected
         static Process process;
