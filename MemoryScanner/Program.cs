@@ -240,7 +240,7 @@ namespace MemoryScanner
         public static extern IntPtr OpenProcess(int dwDesiredAccess, bool bInheritHandle, int dwProcessId);
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, int dwSize, out int lpNumberOfBytesRead);
+        public static extern bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, UIntPtr dwSize, out int lpNumberOfBytesRead);
         
         [DllImport("kernel32.dll")]
         static extern void GetSystemInfo(out SYSTEM_INFO lpSystemInfo);
@@ -645,7 +645,7 @@ namespace MemoryScanner
                         byte[] buffer = new byte[(int)mem_basic_info.RegionSize];
 
                         // read everything in the buffer above
-                        ReadProcessMemory(processHandle, mem_basic_info.BaseAddress, buffer, mem_basic_info.RegionSize, ref bytesRead);
+                        ReadProcessMemory(processHandle, mem_basic_info.BaseAddress, buffer, mem_basic_info.RegionSize, out bytesRead);
 
                         String memStringASCII = Encoding.ASCII.GetString(buffer);
                         String memStringUNICODE = Encoding.Unicode.GetString(buffer);
@@ -796,7 +796,7 @@ namespace MemoryScanner
                         byte[] buffer = new byte[(int)mem_basic_info.RegionSize];
 
                         // read everything in the buffer above
-                        ReadProcessMemory(processHandle, mem_basic_info.BaseAddress, buffer, mem_basic_info.RegionSize, ref bytesRead);
+                        ReadProcessMemory(processHandle, mem_basic_info.BaseAddress, buffer, mem_basic_info.RegionSize, out bytesRead);
 
                         String memStringASCII = Encoding.ASCII.GetString(buffer);
                         String memStringUNICODE = Encoding.Unicode.GetString(buffer);
@@ -951,7 +951,7 @@ namespace MemoryScanner
                         byte[] buffer = new byte[(int)mem_basic_info.RegionSize];
 
                         // read everything in the buffer above
-                        ReadProcessMemory(processHandle, mem_basic_info.BaseAddress, buffer, mem_basic_info.RegionSize, ref bytesRead);
+                        ReadProcessMemory(processHandle, mem_basic_info.BaseAddress, buffer, mem_basic_info.RegionSize, out bytesRead);
 
                         String memStringASCII = Encoding.ASCII.GetString(buffer);
                         String memStringUNICODE = Encoding.Unicode.GetString(buffer);
@@ -1123,7 +1123,7 @@ namespace MemoryScanner
                         byte[] buffer = new byte[(int)mem_basic_info.RegionSize];
 
                         // read everything in the buffer above
-                        ReadProcessMemory(processHandle, mem_basic_info.BaseAddress, buffer, mem_basic_info.RegionSize, ref bytesRead);
+                        ReadProcessMemory(processHandle, mem_basic_info.BaseAddress, buffer, mem_basic_info.RegionSize, out bytesRead);
 
                         String memStringASCII = Encoding.ASCII.GetString(buffer);
                         String memStringUNICODE = Encoding.Unicode.GetString(buffer);
