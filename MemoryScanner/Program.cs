@@ -239,9 +239,9 @@ namespace MemoryScanner
         [DllImport("kernel32.dll")]
         public static extern IntPtr OpenProcess(int dwDesiredAccess, bool bInheritHandle, int dwProcessId);
 
-        [DllImport("kernel32.dll")]
-        public static extern bool ReadProcessMemory(int hProcess, int lpBaseAddress, byte[] lpBuffer, int dwSize, ref int lpNumberOfBytesRead);
-
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, int dwSize, out int lpNumberOfBytesRead);
+        
         [DllImport("kernel32.dll")]
         static extern void GetSystemInfo(out SYSTEM_INFO lpSystemInfo);
 
@@ -254,13 +254,13 @@ namespace MemoryScanner
         // REQUIRED STRUCTS
             public struct MEMORY_BASIC_INFORMATION
         {
-            public int BaseAddress;
-            public int AllocationBase;
-            public int AllocationProtect;
-            public int RegionSize;
-            public int State;
-            public int Protect;
-            public int lType;
+            public IntPtr BaseAddress;
+            public IntPtr AllocationBase;
+            public uint AllocationProtect;
+            public UIntPtr RegionSize;
+            public uint State;
+            public uint Protect;
+            public uint Type;
         }
 
         public struct SYSTEM_INFO
@@ -635,16 +635,17 @@ namespace MemoryScanner
 
                 while (proc_min_address_l < proc_max_address_l)
                 {
-                    // 28 = sizeof(MEMORY_BASIC_INFORMATION)
-                    VirtualQueryEx(processHandle, proc_min_address, out mem_basic_info, 28);
+                    uint memInfoSize = (uint)Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION));
+                    VirtualQueryEx(processHandle, proc_min_address, out mem_basic_info, memInfoSize);
+
 
                     // if this memory chunk is accessible
                     if (mem_basic_info.Protect == PAGE_READWRITE && mem_basic_info.State == MEM_COMMIT)
                     {
-                        byte[] buffer = new byte[mem_basic_info.RegionSize];
+                        byte[] buffer = new byte[(int)mem_basic_info.RegionSize];
 
                         // read everything in the buffer above
-                        ReadProcessMemory((int)processHandle, mem_basic_info.BaseAddress, buffer, mem_basic_info.RegionSize, ref bytesRead);
+                        ReadProcessMemory(processHandle, mem_basic_info.BaseAddress, buffer, mem_basic_info.RegionSize, ref bytesRead);
 
                         String memStringASCII = Encoding.ASCII.GetString(buffer);
                         String memStringUNICODE = Encoding.Unicode.GetString(buffer);
@@ -710,7 +711,7 @@ namespace MemoryScanner
                     }
 
                     // truffle shuffle - moving on chunk
-                    proc_min_address_l += mem_basic_info.RegionSize;
+                    proc_min_address_l += (long)mem_basic_info.RegionSize;
                     proc_min_address = new IntPtr(proc_min_address_l);
                 }
             }
@@ -786,16 +787,16 @@ namespace MemoryScanner
 
                 while (proc_min_address_l < proc_max_address_l)
                 {
-                    // 28 = sizeof(MEMORY_BASIC_INFORMATION)
-                    VirtualQueryEx(processHandle, proc_min_address, out mem_basic_info, 28);
+                    uint memInfoSize = (uint)Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION));
+                    VirtualQueryEx(processHandle, proc_min_address, out mem_basic_info, memInfoSize);
 
                     // if this memory chunk is accessible
                     if (mem_basic_info.Protect == PAGE_READWRITE && mem_basic_info.State == MEM_COMMIT)
                     {
-                        byte[] buffer = new byte[mem_basic_info.RegionSize];
+                        byte[] buffer = new byte[(int)mem_basic_info.RegionSize];
 
                         // read everything in the buffer above
-                        ReadProcessMemory((int)processHandle, mem_basic_info.BaseAddress, buffer, mem_basic_info.RegionSize, ref bytesRead);
+                        ReadProcessMemory(processHandle, mem_basic_info.BaseAddress, buffer, mem_basic_info.RegionSize, ref bytesRead);
 
                         String memStringASCII = Encoding.ASCII.GetString(buffer);
                         String memStringUNICODE = Encoding.Unicode.GetString(buffer);
@@ -861,8 +862,9 @@ namespace MemoryScanner
                     }
 
                     // truffle shuffle - moving on chunk
-                    proc_min_address_l += mem_basic_info.RegionSize;
+                    proc_min_address_l += (long)mem_basic_info.RegionSize;
                     proc_min_address = new IntPtr(proc_min_address_l);
+                    
                 }
             }
             // ask Turing if we'll ever get here...
@@ -940,16 +942,16 @@ namespace MemoryScanner
 
                 while (proc_min_address_l < proc_max_address_l)
                 {
-                    // 28 = sizeof(MEMORY_BASIC_INFORMATION)
-                    VirtualQueryEx(processHandle, proc_min_address, out mem_basic_info, 28);
+                    uint memInfoSize = (uint)Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION));
+                    VirtualQueryEx(processHandle, proc_min_address, out mem_basic_info, memInfoSize);
 
                     // if this memory chunk is accessible
                     if (mem_basic_info.Protect == PAGE_READWRITE && mem_basic_info.State == MEM_COMMIT)
                     {
-                        byte[] buffer = new byte[mem_basic_info.RegionSize];
+                        byte[] buffer = new byte[(int)mem_basic_info.RegionSize];
 
                         // read everything in the buffer above
-                        ReadProcessMemory((int)processHandle, mem_basic_info.BaseAddress, buffer, mem_basic_info.RegionSize, ref bytesRead);
+                        ReadProcessMemory(processHandle, mem_basic_info.BaseAddress, buffer, mem_basic_info.RegionSize, ref bytesRead);
 
                         String memStringASCII = Encoding.ASCII.GetString(buffer);
                         String memStringUNICODE = Encoding.Unicode.GetString(buffer);
@@ -1034,7 +1036,7 @@ namespace MemoryScanner
                         }
                     }
                     // truffle shuffle - moving on chunk
-                    proc_min_address_l += mem_basic_info.RegionSize;
+                    proc_min_address_l += (long)mem_basic_info.RegionSize;
                     proc_min_address = new IntPtr(proc_min_address_l);
                 }
             }
@@ -1112,16 +1114,16 @@ namespace MemoryScanner
 
                 while (proc_min_address_l < proc_max_address_l)
                 {
-                    // 28 = sizeof(MEMORY_BASIC_INFORMATION)
-                    VirtualQueryEx(processHandle, proc_min_address, out mem_basic_info, 28);
+                    uint memInfoSize = (uint)Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION));
+                    VirtualQueryEx(processHandle, proc_min_address, out mem_basic_info, memInfoSize);
 
                     // if this memory chunk is accessible
                     if (mem_basic_info.Protect == PAGE_READWRITE && mem_basic_info.State == MEM_COMMIT)
                     {
-                        byte[] buffer = new byte[mem_basic_info.RegionSize];
+                        byte[] buffer = new byte[(int)mem_basic_info.RegionSize];
 
                         // read everything in the buffer above
-                        ReadProcessMemory((int)processHandle, mem_basic_info.BaseAddress, buffer, mem_basic_info.RegionSize, ref bytesRead);
+                        ReadProcessMemory(processHandle, mem_basic_info.BaseAddress, buffer, mem_basic_info.RegionSize, ref bytesRead);
 
                         String memStringASCII = Encoding.ASCII.GetString(buffer);
                         String memStringUNICODE = Encoding.Unicode.GetString(buffer);
@@ -1207,7 +1209,7 @@ namespace MemoryScanner
                         }
                     }
                     // truffle shuffle - moving on chunk
-                    proc_min_address_l += mem_basic_info.RegionSize;
+                    proc_min_address_l += (long)mem_basic_info.RegionSize;
                     proc_min_address = new IntPtr(proc_min_address_l);
                 }
             }
