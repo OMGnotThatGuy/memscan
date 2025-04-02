@@ -13,6 +13,26 @@
 //
 // Code adapted from http://www.codeproject.com/Articles/716227/Csharp-How-to-Scan-a-Process-Memory
 // Original code licensed under CPOL: http://www.codeproject.com/info/cpol10.aspx
+//
+/* Notes from OMGnotThatGuy: 
+    Alignment may still be off in 64 bit programs due to differences in how MEMORY_BASIC_INFORMATION
+    works. May need to specify MEMORY_BASIC_INFORMATION32 and MEMORY_BASIC_INFORMATION64 as different
+    structs. The docs are vague, so some experimentation may be needed to figure out what is correct.
+
+    When reading a region of memory into byte[] buffer using ReadProcessMemory, the buffer is allocated
+     using RegionSize cast to an int. This potentially overflows if IntPtr is 64bits and RegionSize is
+     >2048 MB. This flaw existed in the original 32 bit version as well. To get around this, the memory
+     reads may need to be chunked.
+
+    I haven't read enough of the code to understand if the original authors are varying offsets when
+     reading through the memory. That might help when doing unicode string searches, if the target
+     process has some weird internal address offsets.
+
+    https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtualqueryex
+    https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-memory_basic_information#remarks
+    https://learn.microsoft.com/en-us/windows/win32/memory/memory-limits-for-windows-releases
+*/
+
 
 using System;
 using System.Net;
