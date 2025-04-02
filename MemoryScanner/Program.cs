@@ -13,6 +13,26 @@
 //
 // Code adapted from http://www.codeproject.com/Articles/716227/Csharp-How-to-Scan-a-Process-Memory
 // Original code licensed under CPOL: http://www.codeproject.com/info/cpol10.aspx
+//
+/* Notes from OMGnotThatGuy: 
+    Alignment may still be off in 64 bit programs due to differences in how MEMORY_BASIC_INFORMATION
+    works. May need to specify MEMORY_BASIC_INFORMATION32 and MEMORY_BASIC_INFORMATION64 as different
+    structs. The docs are vague, so some experimentation may be needed to figure out what is correct.
+
+    When reading a region of memory into byte[] buffer using ReadProcessMemory, the buffer is allocated
+     using RegionSize cast to an int. This potentially overflows if IntPtr is 64bits and RegionSize is
+     >2048 MB. This flaw existed in the original 32 bit version as well. To get around this, the memory
+     reads may need to be chunked.
+
+    I haven't read enough of the code to understand if the original authors are varying offsets when
+     reading through the memory. That might help when doing unicode string searches, if the target
+     process has some weird internal address offsets.
+
+    https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtualqueryex
+    https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-memory_basic_information#remarks
+    https://learn.microsoft.com/en-us/windows/win32/memory/memory-limits-for-windows-releases
+*/
+
 
 using System;
 using System.Net;
@@ -237,16 +257,16 @@ namespace MemoryScanner
 
         // REQUIRED METHODS
         [DllImport("kernel32.dll")]
-        public static extern IntPtr OpenProcess(int dwDesiredAccess, bool bInheritHandle, int dwProcessId);
+        public static extern IntPtr OpenProcess(uint dwDesiredAccess, bool bInheritHandle, uint dwProcessId);
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        public static extern bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, UIntPtr dwSize, out int lpNumberOfBytesRead);
+        public static extern bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, [Out] byte[] lpBuffer, UIntPtr dwSize, out UIntPtr lpNumberOfBytesRead);
         
         [DllImport("kernel32.dll")]
-        static extern void GetSystemInfo(out SYSTEM_INFO lpSystemInfo);
+        public static extern void GetSystemInfo(out SYSTEM_INFO lpSystemInfo);
 
         [DllImport("kernel32.dll", SetLastError = true)]
-        static extern int VirtualQueryEx(IntPtr hProcess, IntPtr lpAddress, out MEMORY_BASIC_INFORMATION lpBuffer, uint dwLength);
+        public static extern UIntPtr VirtualQueryEx(IntPtr hProcess, IntPtr lpAddress, out MEMORY_BASIC_INFORMATION lpBuffer, UIntPtr dwLength);
 
         // process to be inspected
         static Process process;
@@ -622,22 +642,21 @@ namespace MemoryScanner
                 String toSend = "";
 
                 // opening the process with desired access level
-                IntPtr processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_WM_READ, false, process.Id);
+                IntPtr processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_WM_READ, false, (uint) process.Id);
 
                 // this will store any information we get from VirtualQueryEx()
                 MEMORY_BASIC_INFORMATION mem_basic_info = new MEMORY_BASIC_INFORMATION();
 
                 // number of bytes read with ReadProcessMemory
-                int bytesRead = 0;
+                UIntPtr bytesRead = UIntPtr.Zero;
 
                 // for some efficiencies, pre-compute prepostfix values
                 int postfix = myargs.searchterm.Length + (myargs.prepostfix * 2);
 
                 while (proc_min_address_l < proc_max_address_l)
                 {
-                    uint memInfoSize = (uint)Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION));
+                    UIntPtr memInfoSize = new UIntPtr((uint)Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION)));
                     VirtualQueryEx(processHandle, proc_min_address, out mem_basic_info, memInfoSize);
-
 
                     // if this memory chunk is accessible
                     if (mem_basic_info.Protect == PAGE_READWRITE && mem_basic_info.State == MEM_COMMIT)
@@ -656,7 +675,7 @@ namespace MemoryScanner
                             int idex = 0;
                             while ((idex = memStringASCII.IndexOf(myargs.searchterm, idex)) != -1)
                             {
-                                toSend += "0x" + (mem_basic_info.BaseAddress + idex).ToString() + ":A:" + memStringASCII.Substring(idex - myargs.prepostfix, postfix) + "\n";
+                                toSend += "0x" + (mem_basic_info.BaseAddress + idex).ToString("X") + ":A:" + memStringASCII.Substring(idex - myargs.prepostfix, postfix) + "\n";
 
                                 
 
@@ -687,7 +706,7 @@ namespace MemoryScanner
                             int idex = 0;
                             while ((idex = memStringUNICODE.IndexOf(myargs.searchterm, idex)) != -1)
                             {
-                                toSend += "0x" + (mem_basic_info.BaseAddress + idex).ToString() + ":U:" + memStringUNICODE.Substring(idex - myargs.prepostfix, postfix) + "\n";
+                                toSend += "0x" + (mem_basic_info.BaseAddress + idex).ToString("X") + ":U:" + memStringUNICODE.Substring(idex - myargs.prepostfix, postfix) + "\n";
 
                                 if (myargs.mode.Equals("socket"))
                                 {
@@ -774,20 +793,20 @@ namespace MemoryScanner
                 String toSend = "";
 
                 // opening the process with desired access level
-                IntPtr processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_WM_READ, false, process.Id);
+                IntPtr processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_WM_READ, false, (uint)process.Id);
 
                 // this will store any information we get from VirtualQueryEx()
                 MEMORY_BASIC_INFORMATION mem_basic_info = new MEMORY_BASIC_INFORMATION();
 
                 // number of bytes read with ReadProcessMemory
-                int bytesRead = 0;
+                UIntPtr bytesRead = UIntPtr.Zero;
 
                 // for some efficiencies, pre-compute prepostfix values
                 int postfix = myargs.searchterm.Length + (myargs.prepostfix * 2);
 
                 while (proc_min_address_l < proc_max_address_l)
                 {
-                    uint memInfoSize = (uint)Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION));
+                    UIntPtr memInfoSize = new UIntPtr((uint)Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION)));
                     VirtualQueryEx(processHandle, proc_min_address, out mem_basic_info, memInfoSize);
 
                     // if this memory chunk is accessible
@@ -808,7 +827,7 @@ namespace MemoryScanner
                             while (rgx.Match(memStringASCII, idex).Success)
                             {
                                 idex = rgx.Match(memStringASCII, idex).Index;
-                                toSend += "0x" + (mem_basic_info.BaseAddress + idex).ToString() + ":A:" + memStringASCII.Substring(idex - myargs.prepostfix, postfix) + "\n";
+                                toSend += "0x" + (mem_basic_info.BaseAddress + idex).ToString("X") + ":A:" + memStringASCII.Substring(idex - myargs.prepostfix, postfix) + "\n";
 
                                 if (myargs.mode.Equals("socket"))
                                 {
@@ -838,7 +857,7 @@ namespace MemoryScanner
                             while (rgx.Match(memStringUNICODE, idex).Success)
                             {
                                 idex = rgx.Match(memStringUNICODE, idex).Index;
-                                toSend += "0x" + (mem_basic_info.BaseAddress + idex).ToString() + ":U:" + memStringUNICODE.Substring(idex - myargs.prepostfix, postfix) + "\n";
+                                toSend += "0x" + (mem_basic_info.BaseAddress + idex).ToString("X") + ":U:" + memStringUNICODE.Substring(idex - myargs.prepostfix, postfix) + "\n";
 
                                 if (myargs.mode.Equals("socket"))
                                 {
@@ -929,20 +948,20 @@ namespace MemoryScanner
                 String toSend = "";
 
                 // opening the process with desired access level
-                IntPtr processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_WM_READ, false, process.Id);
+                IntPtr processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_WM_READ, false, (uint)process.Id);
 
                 // this will store any information we get from VirtualQueryEx()
                 MEMORY_BASIC_INFORMATION mem_basic_info = new MEMORY_BASIC_INFORMATION();
 
                 // number of bytes read with ReadProcessMemory
-                int bytesRead = 0;
+                UIntPtr bytesRead = UIntPtr.Zero;
 
                 // for some efficiencies, pre-compute prepostfix values
                 int postfix = myargs.searchterm.Length + (myargs.prepostfix * 2);
 
                 while (proc_min_address_l < proc_max_address_l)
                 {
-                    uint memInfoSize = (uint)Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION));
+                    UIntPtr memInfoSize = new UIntPtr((uint)Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION)));
                     VirtualQueryEx(processHandle, proc_min_address, out mem_basic_info, memInfoSize);
 
                     // if this memory chunk is accessible
@@ -1101,20 +1120,20 @@ namespace MemoryScanner
                 String toSend = "";
 
                 // opening the process with desired access level
-                IntPtr processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_WM_READ, false, process.Id);
+                IntPtr processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_WM_READ, false, (uint)process.Id);
 
                 // this will store any information we get from VirtualQueryEx()
                 MEMORY_BASIC_INFORMATION mem_basic_info = new MEMORY_BASIC_INFORMATION();
 
                 // number of bytes read with ReadProcessMemory
-                int bytesRead = 0;
+                UIntPtr bytesRead = UIntPtr.Zero;
 
                 // for some efficiencies, pre-compute prepostfix values
                 int postfix = myargs.searchterm.Length + (myargs.prepostfix * 2);
 
                 while (proc_min_address_l < proc_max_address_l)
                 {
-                    uint memInfoSize = (uint)Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION));
+                    UIntPtr memInfoSize = new UIntPtr((uint)Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION)));
                     VirtualQueryEx(processHandle, proc_min_address, out mem_basic_info, memInfoSize);
 
                     // if this memory chunk is accessible
