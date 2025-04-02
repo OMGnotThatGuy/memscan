@@ -622,22 +622,21 @@ namespace MemoryScanner
                 String toSend = "";
 
                 // opening the process with desired access level
-                IntPtr processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_WM_READ, false, process.Id);
+                IntPtr processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_WM_READ, false, (uint) process.Id);
 
                 // this will store any information we get from VirtualQueryEx()
                 MEMORY_BASIC_INFORMATION mem_basic_info = new MEMORY_BASIC_INFORMATION();
 
                 // number of bytes read with ReadProcessMemory
-                int bytesRead = 0;
+                UIntPtr bytesRead = UIntPtr.Zero;
 
                 // for some efficiencies, pre-compute prepostfix values
                 int postfix = myargs.searchterm.Length + (myargs.prepostfix * 2);
 
                 while (proc_min_address_l < proc_max_address_l)
                 {
-                    uint memInfoSize = (uint)Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION));
+                    UIntPtr memInfoSize = new UIntPtr((uint)Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION)));
                     VirtualQueryEx(processHandle, proc_min_address, out mem_basic_info, memInfoSize);
-
 
                     // if this memory chunk is accessible
                     if (mem_basic_info.Protect == PAGE_READWRITE && mem_basic_info.State == MEM_COMMIT)
@@ -780,14 +779,14 @@ namespace MemoryScanner
                 MEMORY_BASIC_INFORMATION mem_basic_info = new MEMORY_BASIC_INFORMATION();
 
                 // number of bytes read with ReadProcessMemory
-                int bytesRead = 0;
+                UIntPtr bytesRead = UIntPtr.Zero;
 
                 // for some efficiencies, pre-compute prepostfix values
                 int postfix = myargs.searchterm.Length + (myargs.prepostfix * 2);
 
                 while (proc_min_address_l < proc_max_address_l)
                 {
-                    uint memInfoSize = (uint)Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION));
+                    UIntPtr memInfoSize = new UIntPtr((uint)Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION)));
                     VirtualQueryEx(processHandle, proc_min_address, out mem_basic_info, memInfoSize);
 
                     // if this memory chunk is accessible
@@ -935,14 +934,14 @@ namespace MemoryScanner
                 MEMORY_BASIC_INFORMATION mem_basic_info = new MEMORY_BASIC_INFORMATION();
 
                 // number of bytes read with ReadProcessMemory
-                int bytesRead = 0;
+                UIntPtr bytesRead = UIntPtr.Zero;
 
                 // for some efficiencies, pre-compute prepostfix values
                 int postfix = myargs.searchterm.Length + (myargs.prepostfix * 2);
 
                 while (proc_min_address_l < proc_max_address_l)
                 {
-                    uint memInfoSize = (uint)Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION));
+                    UIntPtr memInfoSize = new UIntPtr((uint)Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION)));
                     VirtualQueryEx(processHandle, proc_min_address, out mem_basic_info, memInfoSize);
 
                     // if this memory chunk is accessible
@@ -1107,14 +1106,14 @@ namespace MemoryScanner
                 MEMORY_BASIC_INFORMATION mem_basic_info = new MEMORY_BASIC_INFORMATION();
 
                 // number of bytes read with ReadProcessMemory
-                int bytesRead = 0;
+                UIntPtr bytesRead = UIntPtr.Zero;
 
                 // for some efficiencies, pre-compute prepostfix values
                 int postfix = myargs.searchterm.Length + (myargs.prepostfix * 2);
 
                 while (proc_min_address_l < proc_max_address_l)
                 {
-                    uint memInfoSize = (uint)Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION));
+                    UIntPtr memInfoSize = new UIntPtr((uint)Marshal.SizeOf(typeof(MEMORY_BASIC_INFORMATION)));
                     VirtualQueryEx(processHandle, proc_min_address, out mem_basic_info, memInfoSize);
 
                     // if this memory chunk is accessible
