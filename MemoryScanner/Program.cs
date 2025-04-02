@@ -28,6 +28,9 @@
      reading through the memory. That might help when doing unicode string searches, if the target
      process has some weird internal address offsets.
 
+    When outputting raw data from the buffer, there needs to be some cleanup to ensure terminal codes
+     don't mess up the printed lines.
+
     https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtualqueryex
     https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-memory_basic_information#remarks
     https://learn.microsoft.com/en-us/windows/win32/memory/memory-limits-for-windows-releases
