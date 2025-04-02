@@ -773,7 +773,7 @@ namespace MemoryScanner
                 String toSend = "";
 
                 // opening the process with desired access level
-                IntPtr processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_WM_READ, false, process.Id);
+                IntPtr processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_WM_READ, false, (uint)process.Id);
 
                 // this will store any information we get from VirtualQueryEx()
                 MEMORY_BASIC_INFORMATION mem_basic_info = new MEMORY_BASIC_INFORMATION();
@@ -928,7 +928,7 @@ namespace MemoryScanner
                 String toSend = "";
 
                 // opening the process with desired access level
-                IntPtr processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_WM_READ, false, process.Id);
+                IntPtr processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_WM_READ, false, (uint)process.Id);
 
                 // this will store any information we get from VirtualQueryEx()
                 MEMORY_BASIC_INFORMATION mem_basic_info = new MEMORY_BASIC_INFORMATION();
@@ -1100,7 +1100,7 @@ namespace MemoryScanner
                 String toSend = "";
 
                 // opening the process with desired access level
-                IntPtr processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_WM_READ, false, process.Id);
+                IntPtr processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_WM_READ, false, (uint)process.Id);
 
                 // this will store any information we get from VirtualQueryEx()
                 MEMORY_BASIC_INFORMATION mem_basic_info = new MEMORY_BASIC_INFORMATION();
